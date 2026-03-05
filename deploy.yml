@@ -1,0 +1,44 @@
+name: Deploy BNL TMS naar Cloudflare Pages
+
+on:
+  # Automatisch deployen bij elke push naar main
+  push:
+    branches:
+      - main
+  # Of handmatig starten via GitHub UI
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Build & Deploy
+
+    steps:
+      # 1. Haal de code op
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Installeer Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Installeer dependencies
+      - name: Installeer dependencies
+        run: npm ci
+
+      # 4. Bouw de productieversie
+      - name: Bouw React app
+        run: npm run build
+
+      # 5. Deploy naar Cloudflare Pages
+      - name: Deploy naar Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: bnl-tms          # ← Naam van je Cloudflare Pages project
+          directory: dist               # ← Map met gebouwde bestanden
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
